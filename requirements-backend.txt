@@ -1,0 +1,19 @@
+# Backend + local inference (Mac). Use Python 3.12.
+# transformers and scikit-learn are pinned to the versions used in Colab, so the exported
+# model and .joblib classifiers load identically.
+django>=5.2,<5.3
+djangorestframework>=3.16,<3.17
+django-cors-headers>=4.7,<5
+psycopg[binary]>=3.2,<4
+python-dotenv>=1.1,<2
+
+torch>=2.6
+transformers==5.18.0
+sentencepiece>=0.2
+safetensors>=0.5
+scikit-learn==1.6.1
+joblib>=1.4
+pandas>=2.2
+
+# Optional Gemini benchmark:
+# google-genai
