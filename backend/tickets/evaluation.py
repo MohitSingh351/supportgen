@@ -61,6 +61,7 @@ def load_evaluation(results_dir: Path, model_dir: Path) -> dict:
         "comparison": _json(results_dir / "comparison_metrics.json"),
         "classification": _drop_per_class(_json(results_dir / "cls_metrics.json")),
         "human_eval": _json(results_dir / "human_eval_summary.json"),
+        "llm_judge": _json(results_dir / "llm_judge_summary.json"),
         "experiments": _csv(results_dir / "experiments.csv"),
         "train_log": _csv(results_dir / "train_log_B_ft_flan-t5-small.csv"),
         "qualitative_examples": _csv(results_dir / "qualitative_examples_A_vs_B.csv"),

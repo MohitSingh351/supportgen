@@ -1,0 +1,86 @@
+{
+  "judge": "Claude (claude-opus-5-5), LLM-as-a-judge \u2014 not a human evaluation",
+  "items": 50,
+  "protocol": "see results/llm_judge_rubric.md",
+  "mean_scores": {
+    "A: base FLAN-T5-small": {
+      "relevance": 1.48,
+      "correctness": 1.1,
+      "fluency": 3.3,
+      "professional_tone": 1.08,
+      "helpfulness": 1.0,
+      "overall": 1.59
+    },
+    "B: fine-tuned FLAN-T5-small": {
+      "relevance": 4.34,
+      "correctness": 3.58,
+      "fluency": 4.68,
+      "professional_tone": 4.74,
+      "helpfulness": 2.82,
+      "overall": 4.03
+    }
+  },
+  "std_scores": {
+    "A: base FLAN-T5-small": {
+      "relevance": 0.58,
+      "correctness": 0.36,
+      "fluency": 1.23,
+      "professional_tone": 0.27,
+      "helpfulness": 0.0,
+      "overall": 0.39
+    },
+    "B: fine-tuned FLAN-T5-small": {
+      "relevance": 0.52,
+      "correctness": 0.67,
+      "fluency": 0.55,
+      "professional_tone": 0.6,
+      "helpfulness": 0.48,
+      "overall": 0.3
+    }
+  },
+  "pairwise": {
+    "finetuned_better": 50,
+    "base_better": 0,
+    "ties": 0,
+    "wilcoxon_p_overall": 7.205648505828603e-10
+  },
+  "failure_counts": {
+    "A: base FLAN-T5-small": {
+      "not_a_support_reply (tone = 1)": 46,
+      "correctness <= 2 (wrong, invented or no reply)": 49,
+      "helpfulness >= 4": 0
+    },
+    "B: fine-tuned FLAN-T5-small": {
+      "not_a_support_reply (tone = 1)": 0,
+      "correctness <= 2 (wrong, invented or no reply)": 5,
+      "helpfulness >= 4": 2
+    }
+  },
+  "finetuned_low_correctness_examples": [
+    {
+      "item": 73,
+      "correctness": 2,
+      "comment": "Fluent and polite but asks the customer for the API version the customer asked support for"
+    },
+    {
+      "item": 194,
+      "correctness": 2,
+      "comment": "On topic but asserts specific security measures and a HIPAA certification it cannot know (hallucination)"
+    },
+    {
+      "item": 461,
+      "correctness": 2,
+      "comment": "Asks the customer for the update details the customer asked support to provide"
+    },
+    {
+      "item": 173,
+      "correctness": 2,
+      "comment": "Answers the question but invents a specific list of services (hallucination)"
+    },
+    {
+      "item": 384,
+      "correctness": 2,
+      "comment": "Answers every question but asserts gateway support and discounts it cannot know (hallucination)"
+    }
+  ]
+}

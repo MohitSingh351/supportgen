@@ -1,0 +1,101 @@
+item,response_label,relevance,correctness,fluency,professional_tone,helpfulness,comment
+361,X,4,4,5,5,3,Addresses the issue; asks for affected products and errors; offers a call
+361,Y,1,1,3,1,1,Echoes the ticket with a 'Customer ticket:' prefix; not a reply
+73,X,2,2,2,1,1,Fragment that restates the subject; not a reply
+73,Y,4,2,5,5,2,Fluent and polite but asks the customer for the API version the customer asked support for
+374,X,4,4,4,5,3,Relevant; slightly redundant question about tools; offers a call
+374,Y,2,2,5,1,1,Written in the customer's voice; restates the request
+155,X,4,4,4,4,3,Relevant clarifying questions; abrupt opening fragment
+155,Y,2,1,2,1,1,Customer's voice; garbled; offers no help
+104,X,4,4,5,4,3,Relevant; asks for versions and errors; generic next step
+104,Y,1,1,3,1,1,Echoes the ticket with a 'Customer ticket:' prefix
+394,X,1,1,4,1,1,Repeats the ticket verbatim
+394,Y,4,4,5,5,3,Apologises and asks for device settings and errors
+377,X,3,3,5,2,1,Literal yes with no information
+377,Y,4,4,4,4,3,Offers information and a call; brief
+124,X,3,2,5,2,1,One unsupported claim; describes no measures
+124,Y,4,3,5,5,2,Polite; vague claim of robust measures; explains nothing and only offers a call
+68,X,4,4,5,5,3,Acknowledges troubleshooting already done; asks for update details and errors
+68,Y,2,1,2,1,1,Restates the ticket as a heading; not a reply
+450,X,4,3,5,5,3,Asks for steps and the Ubuntu version although the ticket already gives both
+450,Y,1,1,3,1,1,Echoes the ticket
+9,X,2,1,4,1,1,Copies a sentence from the ticket
+9,Y,5,4,5,5,3,Reflects the specific request; asks for infrastructure details; offers a call
+194,X,5,2,4,5,3,On topic but asserts specific security measures and a HIPAA certification it cannot know (hallucination)
+194,Y,2,1,5,1,1,Customer's voice; copies the request
+406,X,1,1,2,1,1,Outputs only the subject line
+406,Y,5,4,5,5,4,Reflects the requested features; promises a timeline and a follow-up
+84,X,1,1,5,2,1,Says only 'Thank you for your help'
+84,Y,5,4,5,5,4,"Gives concrete recommendations (encryption, access controls, audits); salutation uses a placeholder"
+371,X,1,1,4,1,1,Customer's voice; restates the ticket
+371,Y,4,4,5,5,3,Reflects the situation; asks for details on changes; offers a call
+388,X,4,4,5,5,2,Polite and on topic but gives no guidance; only schedules a call
+388,Y,2,1,4,1,1,Third-person restatement of the ticket
+495,X,2,1,5,1,1,Customer's voice; restates the question
+495,Y,4,4,5,5,2,Says information can be provided but provides none; offers a call
+30,X,5,4,5,5,2,Acknowledges the breach and its urgency but gives no immediate security advice; only schedules a call
+30,Y,2,1,5,1,1,Customer's voice; doubts the breach; not a reply
+316,X,2,1,5,1,1,Customer's voice; questions the customer's own troubleshooting
+316,Y,4,4,5,4,3,Says the issue is being investigated; asks for software details; offers a call
+408,X,1,1,2,1,1,Meaningless fragment
+408,Y,5,4,5,5,3,Acknowledges the steps already taken; asks for account and error details
+490,X,2,1,5,1,1,Extracts one sentence from the ticket
+490,Y,4,3,5,5,3,Relevant; asks about device updates and error messages the ticket did not mention
+491,X,5,3,5,5,3,Relevant; asks for steps already described in the ticket
+491,Y,1,1,3,1,1,Echoes the ticket and is cut off
+280,X,1,1,2,1,1,Fragment of the subject
+280,Y,4,3,5,4,3,Relevant; misquotes the version as 111.1
+356,X,1,1,2,1,1,Echoes the ticket with a 'Customer ticket:' prefix
+356,Y,4,4,4,5,3,Relevant; copies awkward phrasing; asks which tools and challenges
+76,X,5,4,4,5,3,Acknowledges troubleshooting; asks for details and dates; one typo
+76,Y,2,1,2,1,1,A heading only
+461,X,2,1,4,1,1,Misstates the ticket; not a reply
+461,Y,4,2,5,5,2,Asks the customer for the update details the customer asked support to provide
+497,X,1,1,4,1,1,Repeats the ticket verbatim
+497,Y,4,4,5,4,3,Asks for details of the access attempts; offers a call
+211,X,5,4,4,5,3,Relevant; asks for account and overcharge date; ends with a cut-off placeholder
+211,Y,1,1,3,1,1,Echoes the ticket
+101,X,2,1,3,1,1,Restates the question with a 'Customer ticket:' prefix
+101,Y,4,4,4,5,3,Agrees to the call the customer requested; repeats 'specific needs'
+334,X,1,1,3,1,1,Echoes the ticket
+334,Y,4,4,4,5,3,Commits to a review; asks for integration details; typo 'SaAS'
+475,X,1,1,1,1,1,Two meaningless words
+475,Y,4,4,5,5,3,Relevant; asks for current efforts and goals
+336,X,4,4,3,5,2,Relevant but has an unfinished sentence; only offers a call
+336,Y,2,1,3,1,1,Vague and not a support reply
+440,X,1,1,2,1,1,Meaningless 'Customer ticket:' fragment
+440,Y,5,4,5,5,3,Acknowledges the impact; asks for error details and affected tools
+173,X,5,2,5,5,3,Answers the question but invents a specific list of services (hallucination)
+173,Y,2,1,4,1,1,Circular restatement of the question
+2,X,4,4,3,5,3,Relevant; repeats 'data sources and data sources'; offers a call
+2,Y,1,1,2,1,1,Subject line only
+333,X,1,1,2,1,1,Subject line only
+333,Y,5,3,5,5,3,Relevant; asks for steps and error messages the ticket already covers or never mentions
+409,X,5,4,4,5,3,Reflects the request; promises guidance on integration options; minor grammar slip
+409,Y,1,1,2,1,1,Echoes the ticket's first line
+70,X,5,3,5,5,3,Relevant; asks for the steps the customer already described
+70,Y,1,1,2,1,1,Subject line only
+209,X,1,1,2,1,1,Subject line only
+209,Y,5,4,5,5,3,Asks for scaling-activity details and errors; offers a call
+63,X,4,4,5,5,3,Apologises; asks for error details; offers a call
+63,Y,2,1,3,1,1,Rephrases the ticket as an instruction
+384,X,5,2,5,5,3,Answers every question but asserts gateway support and discounts it cannot know (hallucination)
+384,Y,1,1,5,2,1,Says only 'Thanks for your help'
+93,X,2,1,5,1,1,Copies the last sentence of the ticket
+93,Y,4,4,5,5,2,"Acknowledges the urgency; offers only a call, no safeguarding advice"
+485,X,2,1,4,1,1,Customer's voice; restates the request
+485,Y,4,3,4,5,2,Conflates the tool with Blackboard Learn; promises information but gives none
+185,X,1,1,2,1,1,Meaningless heading
+185,Y,5,3,5,5,3,Relevant; asks for the troubleshooting steps the customer already described
+33,X,1,1,4,1,1,Says only 'Please call me if you have any questions'
+33,Y,4,4,5,5,3,Apologises; asks for discrepancy details; offers a call
+77,X,1,1,3,1,1,Echoes the ticket with a 'Customer ticket:' prefix
+77,Y,3,3,4,2,2,Curt; tells the customer to review the issue themselves
+0,X,1,1,4,1,1,Customer's voice; contradicts the request
+0,Y,5,4,5,4,3,Relevant; recommends encryption and access controls in general terms; offers a call
+11,X,4,4,5,3,3,Brief but commits to looking into the API issue and calling
+11,Y,1,1,2,1,1,Subject line only
+415,X,2,1,5,1,1,Copies one sentence of the ticket
+415,Y,4,3,5,4,2,"Does not give the requested encryption guidance; asks for error messages, which do not fit a breach report"
+22,X,4,4,5,5,3,Relevant; asks for integration details; offers a call
+22,Y,1,1,2,1,1,Subject line only

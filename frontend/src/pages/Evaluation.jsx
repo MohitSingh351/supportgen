@@ -107,6 +107,62 @@ function GenerationQuality({ gen }) {
   );
 }
 
+const CRITERIA = [["relevance", "Relevance"], ["correctness", "Correctness"], ["fluency", "Fluency"],
+                  ["professional_tone", "Professional tone"], ["helpfulness", "Helpfulness"], ["overall", "Overall (mean)"]];
+
+function JudgeEvaluation({ j }) {
+  if (!j) return null;
+  const [baseName, ftName] = Object.keys(j.mean_scores);
+  const base = j.mean_scores[baseName], ft = j.mean_scores[ftName];
+  const fails = j.failure_counts;
+  return (
+    <div className="section">
+      <h2>AI-judge evaluation (LLM-as-a-judge)</h2>
+      <p className="lede">An AI model (Claude) rated {j.items} blinded ticket pairs from 1 to 5, using a rubric written
+        before rating. This is not a human evaluation. It checks meaning and correctness, which word-overlap metrics cannot.</p>
+      <div className="grid-2" style={{ alignItems: "start" }}>
+        <div className="panel">
+          <GroupedBars rows={CRITERIA.map(([k, label]) => ({ metric: label.replace(" (mean)", "").replace("Professional tone", "Tone"), base: base[k], ft: ft[k] }))}
+                       series={[{ key: "base", name: "Base FLAN-T5-small", color: "var(--series-2)" },
+                                { key: "ft", name: "Fine-tuned (ours)", color: "var(--series-1)" }]}
+                       format={(v) => v.toFixed(2)} yMax={5} />
+          <p className="small muted">Mean rating on a 1–5 scale.</p>
+        </div>
+        <div className="panel table-wrap">
+          <table>
+            <thead><tr><th>Criterion</th><th className="n">Base</th><th className="n">Fine-tuned</th></tr></thead>
+            <tbody>
+              {CRITERIA.map(([k, label]) => (
+                <tr key={k}><td>{label}</td><td className="n">{fmt(base[k], 2)}</td><td className="n">{fmt(ft[k], 2)}</td></tr>
+              ))}
+            </tbody>
+          </table>
+          <dl className="facts" style={{ marginTop: 14 }}>
+            <dt>Head to head</dt>
+            <dd className="num">Fine-tuned rated higher on {j.pairwise.finetuned_better} of {j.items} tickets,
+              base on {j.pairwise.base_better}, {j.pairwise.ties} ties (Wilcoxon p = {Number(j.pairwise.wilcoxon_p_overall).toExponential(1)})</dd>
+            <dt>Not a support reply</dt>
+            <dd className="num">Base {fails[baseName]["not_a_support_reply (tone = 1)"]} of {j.items}, fine-tuned {fails[ftName]["not_a_support_reply (tone = 1)"]} of {j.items}</dd>
+            <dt>Correctness ≤ 2</dt>
+            <dd className="num">Base {fails[baseName]["correctness <= 2 (wrong, invented or no reply)"]}, fine-tuned {fails[ftName]["correctness <= 2 (wrong, invented or no reply)"]}</dd>
+          </dl>
+        </div>
+      </div>
+      {j.finetuned_low_correctness_examples?.length > 0 && (
+        <div className="panel" style={{ marginTop: 16 }}>
+          <h3 style={{ marginBottom: 8 }}>Where the fine-tuned model went wrong</h3>
+          <ul style={{ margin: 0, paddingLeft: 20, display: "grid", gap: 4 }}>
+            {j.finetuned_low_correctness_examples.map((e) => <li key={e.item} className="small">{e.comment}</li>)}
+          </ul>
+        </div>
+      )}
+      <p className="small muted" style={{ marginTop: 10 }}>Caveats: a single AI rater; it may favour longer or more polite
+        replies; it helped build this project; and blinding is imperfect because the fine-tuned style is recognisable.
+        Rubric: results/llm_judge_rubric.md.</p>
+    </div>
+  );
+}
+
 function Efficiency({ eff }) {
   if (!eff) return null;
   return (
@@ -234,7 +290,7 @@ function Limitations({ a, b, human }) {
           <li>The model can state facts that contradict the ticket (hallucination), so every reply is a draft for a human agent.</li>
           <li>The dataset is synthetic, so results show adaptation to its domain and style rather than to a real company.</li>
           <li>Summaries and recommended actions have no ground-truth labels. Zero-shot FLAN-T5 output was poor, so the app uses fallbacks and labels the source.</li>
-          <li>{human ? "Human evaluation results are included above." : "The blinded human evaluation sheet (50 tickets) has not been rated yet."}</li>
+          <li>{human ? "Human ratings are available in results/human_eval_summary.json." : "No human evaluation was carried out; quality beyond automatic metrics was judged by an AI rater (see above)."}</li>
         </ul>
       </div>
     </div>
@@ -263,6 +319,7 @@ export default function Evaluation() {
       </div>
       {data.training_config && <Training tc={data.training_config} log={data.train_log} />}
       <GenerationQuality gen={data.generation} />
+      <JudgeEvaluation j={data.llm_judge} />
       <Efficiency eff={data.generation.efficiency_finetuned} />
       {data.classification && <Classification cls={data.classification} />}
       {data.dataset?.eda && <Dataset ds={data.dataset} />}
