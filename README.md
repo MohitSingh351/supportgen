@@ -1,7 +1,7 @@
 # SupportGen — GenAI-Powered Customer Support Intelligence and Response Generation Using Fine-Tuned Transformers
 
-> **Status:** ML pipeline run in Colab ✅ · Django REST backend ✅ · React frontend — next ·
-> final documentation — last phase.
+> **Status:** ML pipeline run in Colab ✅ · Django REST backend ✅ · React frontend ✅ ·
+> final documentation (report, viva Q&A, demo script) — last phase.
 
 ## What this project is
 SupportGen is a copilot for customer-support agents. It analyses a ticket and **generates a support
@@ -35,7 +35,7 @@ notebooks/   Colab notebooks 01–06 + README_COLAB.md   (all ML work)
 models/      trained artefacts from the Colab export   (gitignored)
 results/     metrics / plots from the Colab export
 backend/     Django + DRF API; AI services in backend/ai/ (no Django imports)
-frontend/    React (next phase)
+frontend/    React (Vite) app: dashboard, analyzer, history, comparison, evaluation
 docs/        theory, report, viva Q&A, demo script (final phase)
 ```
 
@@ -89,6 +89,23 @@ After that, a request takes about 2 s on an M4 CPU.
 - **Summary:** zero-shot FLAN-T5-base with an extractive fallback when the output is degenerate.
 - **Recommended action:** rule-based from the predicted queue and priority, because zero-shot actions were unusable in evaluation.
 - **Sentiment:** inferred by a pretrained model, not evaluated against ground truth.
+
+## Running the frontend
+Requires Node 18 or newer. Start the backend first; the Vite dev server forwards `/api` to `127.0.0.1:8000`.
+```bash
+cd frontend
+npm install
+npm run dev          # http://localhost:5173
+```
+| Page | What it shows |
+|---|---|
+| Dashboard | Totals and distributions of analysed tickets (category, priority, type, inferred sentiment), recent tickets, model headline metrics |
+| Analyze ticket | Customer ticket → fine-tuned FLAN-T5 draft reply, summary, recommended action, category, priority, type, sentiment |
+| Ticket history | Every analysed ticket, with a detail view |
+| Model comparison | Live: the same ticket through base FLAN-T5, fine-tuned FLAN-T5 and Gemini (if configured), plus the offline benchmark |
+| Model evaluation | Training set-up, loss curves, ROUGE/BLEU/BERTScore/cosine with significance tests, efficiency, classifier metrics and confusion matrices, dataset preparation, example replies, limitations |
+
+Every number on the Evaluation and Comparison pages is read from `results/` (the Colab export). None is typed into the UI.
 
 ## Dataset
 [Tobi-Bueck/customer-support-tickets](https://huggingface.co/datasets/Tobi-Bueck/customer-support-tickets)
