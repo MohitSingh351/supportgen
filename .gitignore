@@ -28,3 +28,6 @@ frontend/dist/
 .ipynb_checkpoints/
 .vscode/
 .idea/
+
+# Root-level export ZIP / unzip folder
+supportgen_models/

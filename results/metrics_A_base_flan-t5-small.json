@@ -1,0 +1,28 @@
+{
+  "n": 500,
+  "rouge1": 0.2048567876171622,
+  "rouge2": 0.0801172142997639,
+  "rougeL": 0.1583031969965953,
+  "bleu": 1.1740301576982337,
+  "bertscore_precision": 0.8919493556022644,
+  "bertscore_recall": 0.843159019947052,
+  "bertscore_f1": 0.8665854334831238,
+  "bertscore_f1_rescaled": 0.20950862765312195,
+  "semantic_cosine": 0.5796537399291992,
+  "avg_pred_words": 18.486,
+  "avg_ref_words": 59.796,
+  "distinct_1": 0.17743156983663314,
+  "distinct_2": 0.5537001029394945,
+  "empty_predictions": 0,
+  "bertscore_model": "roberta-large",
+  "sts_model": "sentence-transformers/all-MiniLM-L6-v2",
+  "run_name": "A_base_flan-t5-small",
+  "model": "google/flan-t5-small",
+  "fine_tuned": false,
+  "mean_latency_s_batched": 0.16090567552599952,
+  "decoding": {
+    "num_beams": 4,
+    "no_repeat_ngram_size": 3,
+    "early_stopping": true
+  }
+}

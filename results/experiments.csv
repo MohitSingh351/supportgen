@@ -1,0 +1,3 @@
+run_name,model,date,epochs,learning_rate,batch_size,grad_accum,max_input_len,max_target_len,train_loss,val_loss,test_loss,rouge1,rouge2,rougeL,bleu,bertscore_f1,semantic_cosine,notes
+A_base_flan-t5-small,google/flan-t5-small,2026-10-14 13:18,0.0,,,,160,128,,,,0.2048567876171622,0.0801172142997639,0.1583031969965953,1.1740301576982335,0.8665854334831238,0.5796537399291992,Zero-shot pretrained FLAN-T5-small (no domain fine-tuning)
+B_ft_flan-t5-small,google/flan-t5-small,2026-10-14 13:18,4.0,0.0003,16.0,1.0,160,128,1.3513410771439558,1.1221778392791748,1.110538363456726,0.47356144590653887,0.2399896133882449,0.3428150916101536,19.570800084621414,0.8992730379104614,0.7813077569007874,Full fine-tuning; quick_run=False; Tesla T4

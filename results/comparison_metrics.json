@@ -1,0 +1,48 @@
+{
+  "n_tickets": 100,
+  "metrics": {
+    "A: base FLAN-T5-small": {
+      "n": 100,
+      "rouge1": 0.22331186031541794,
+      "rouge2": 0.08889558467176734,
+      "rougeL": 0.17691461239084438,
+      "bleu": 1.2807511773160385,
+      "bertscore_precision": 0.8942207098007202,
+      "bertscore_recall": 0.845933198928833,
+      "bertscore_f1": 0.8691480755805969,
+      "bertscore_f1_rescaled": 0.22469229996204376,
+      "semantic_cosine": 0.6129322052001953,
+      "avg_pred_words": 19.44,
+      "avg_ref_words": 60.01,
+      "distinct_1": 0.3425925925925926,
+      "distinct_2": 0.7695227765726681,
+      "empty_predictions": 0,
+      "bertscore_model": "roberta-large",
+      "sts_model": "sentence-transformers/all-MiniLM-L6-v2"
+    },
+    "B: fine-tuned FLAN-T5-small": {
+      "n": 100,
+      "rouge1": 0.4834910600729499,
+      "rouge2": 0.24450225102399073,
+      "rougeL": 0.35108974192189135,
+      "bleu": 20.14991113750721,
+      "bertscore_precision": 0.8961029052734375,
+      "bertscore_recall": 0.9046287536621094,
+      "bertscore_f1": 0.9001247882843018,
+      "bertscore_f1_rescaled": 0.40823227167129517,
+      "semantic_cosine": 0.7871460914611816,
+      "avg_pred_words": 65.99,
+      "avg_ref_words": 60.01,
+      "distinct_1": 0.1188058796787392,
+      "distinct_2": 0.29896907216494845,
+      "empty_predictions": 0,
+      "bertscore_model": "roberta-large",
+      "sts_model": "sentence-transformers/all-MiniLM-L6-v2"
+    }
+  },
+  "gemini": null,
+  "deployment_notes": {
+    "fine_tuned_flan_t5_small": "runs locally (CPU/MPS/GPU), no API key, no per-request cost, data stays on-premise",
+    "gemini": "requires network + API key, per-token cost, data sent to a third party"
+  }
+}

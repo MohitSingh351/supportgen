@@ -1,0 +1,20 @@
+{
+  "n": 500,
+  "rouge1": 0.47356144590653887,
+  "rouge2": 0.2399896133882449,
+  "rougeL": 0.3428150916101536,
+  "bleu": 19.570800084621414,
+  "bertscore_precision": 0.8951287269592285,
+  "bertscore_recall": 0.9039526581764221,
+  "bertscore_f1": 0.8992730379104614,
+  "bertscore_f1_rescaled": 0.4031849801540375,
+  "semantic_cosine": 0.7813077569007874,
+  "avg_pred_words": 67.802,
+  "avg_ref_words": 59.796,
+  "distinct_1": 0.049497064983333824,
+  "distinct_2": 0.16230052992425376,
+  "empty_predictions": 0,
+  "bertscore_model": "roberta-large",
+  "sts_model": "sentence-transformers/all-MiniLM-L6-v2",
+  "run_name": "B_ft_flan-t5-small"
+}

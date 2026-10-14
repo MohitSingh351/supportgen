@@ -1,0 +1,159 @@
+{
+  "eval_subset_size": 500,
+  "models": {
+    "A_base_flan-t5-small": {
+      "n": 500,
+      "rouge1": 0.2048567876171622,
+      "rouge2": 0.0801172142997639,
+      "rougeL": 0.1583031969965953,
+      "bleu": 1.1740301576982337,
+      "bertscore_precision": 0.8919493556022644,
+      "bertscore_recall": 0.843159019947052,
+      "bertscore_f1": 0.8665854334831238,
+      "bertscore_f1_rescaled": 0.20950861275196075,
+      "semantic_cosine": 0.5796537399291992,
+      "avg_pred_words": 18.486,
+      "avg_ref_words": 59.796,
+      "distinct_1": 0.17743156983663314,
+      "distinct_2": 0.5537001029394945,
+      "empty_predictions": 0,
+      "bertscore_model": "roberta-large",
+      "sts_model": "sentence-transformers/all-MiniLM-L6-v2"
+    },
+    "B_ft_flan-t5-small": {
+      "n": 500,
+      "rouge1": 0.47356144590653887,
+      "rouge2": 0.2399896133882449,
+      "rougeL": 0.3428150916101536,
+      "bleu": 19.570800084621414,
+      "bertscore_precision": 0.8951287269592285,
+      "bertscore_recall": 0.9039526581764221,
+      "bertscore_f1": 0.8992730379104614,
+      "bertscore_f1_rescaled": 0.4031849801540375,
+      "semantic_cosine": 0.7813077569007874,
+      "avg_pred_words": 67.802,
+      "avg_ref_words": 59.796,
+      "distinct_1": 0.049497064983333824,
+      "distinct_2": 0.16230052992425376,
+      "empty_predictions": 0,
+      "bertscore_model": "roberta-large",
+      "sts_model": "sentence-transformers/all-MiniLM-L6-v2"
+    }
+  },
+  "significance_B_vs_A": {
+    "rouge1": {
+      "mean_A": 0.2048567876171622,
+      "mean_B": 0.47356144590653887,
+      "mean_diff_B_minus_A": 0.26870465828937673,
+      "ci95_low": 0.25288801731998584,
+      "ci95_high": 0.284210028083124,
+      "wilcoxon_p": 2.7282917912356776e-76,
+      "B_better_on_%_of_tickets": 92.0
+    },
+    "rouge2": {
+      "mean_A": 0.0801172142997639,
+      "mean_B": 0.2399896133882449,
+      "mean_diff_B_minus_A": 0.159872399088481,
+      "ci95_low": 0.14730606933969265,
+      "ci95_high": 0.17151570284556353,
+      "wilcoxon_p": 3.2444469698696617e-69,
+      "B_better_on_%_of_tickets": 88.4
+    },
+    "rougeL": {
+      "mean_A": 0.1583031969965953,
+      "mean_B": 0.3428150916101536,
+      "mean_diff_B_minus_A": 0.18451189461355835,
+      "ci95_low": 0.17088963631065018,
+      "ci95_high": 0.19849374186169058,
+      "wilcoxon_p": 1.110613684806335e-68,
+      "B_better_on_%_of_tickets": 87.8
+    },
+    "bertscore_f1": {
+      "mean_A": 0.8665854334831238,
+      "mean_B": 0.8992730379104614,
+      "mean_diff_B_minus_A": 0.032687582075595856,
+      "ci95_low": 0.029891550540924072,
+      "ci95_high": 0.03523213043808937,
+      "wilcoxon_p": 2.96115774169689e-63,
+      "B_better_on_%_of_tickets": 85.39999999999999
+    },
+    "semantic_cosine": {
+      "mean_A": 0.5796537399291992,
+      "mean_B": 0.7813077569007874,
+      "mean_diff_B_minus_A": 0.20165403187274933,
+      "ci95_low": 0.18044710159301758,
+      "ci95_high": 0.22366966307163239,
+      "wilcoxon_p": 1.1854629073923067e-56,
+      "B_better_on_%_of_tickets": 82.19999999999999
+    }
+  },
+  "efficiency_finetuned": {
+    "parameters": 76961152,
+    "size_on_disk_mb": 310.319604,
+    "fp32_weights_mb_estimate": 307.844608,
+    "latency_gpu_batch1": {
+      "mean_s": 1.6025846246333457,
+      "p50_s": 1.642896522500223,
+      "p95_s": 2.1174955800998987,
+      "n": 30,
+      "peak_gpu_mb": 440.881152
+    },
+    "latency_cpu_batch1": {
+      "mean_s": 4.964470477100031,
+      "p50_s": 5.12206653699991,
+      "p95_s": 6.024959113749901,
+      "n": 10,
+      "peak_gpu_mb": null
+    },
+    "gpu": "Tesla T4"
+  },
+  "fine_tuned_model_dir": "/content/drive/MyDrive/SupportGen/models/flan-t5-supportgen",
+  "training_config": {
+    "run_name": "B_ft_flan-t5-small",
+    "base_model": "google/flan-t5-small",
+    "dataset_id": "Tobi-Bueck/customer-support-tickets",
+    "prompt_template": "Generate a professional customer support response.\nSubject: {subject}\nCustomer ticket: {body}",
+    "summary_template": "Summarize the following customer support ticket in one sentence.\nSubject: {subject}\nTicket: {body}",
+    "action_template": "You are helping a human customer support agent. In one short sentence, recommend the next action the agent should take for this ticket.\nSubject: {subject}\nTicket: {body}",
+    "max_input_len": 160,
+    "max_target_len": 128,
+    "generation": {
+      "num_beams": 4,
+      "no_repeat_ngram_size": 3,
+      "early_stopping": true
+    },
+    "hyperparameters": {
+      "learning_rate": 0.0003,
+      "num_train_epochs": 4,
+      "per_device_train_batch_size": 16,
+      "gradient_accumulation_steps": 1,
+      "per_device_eval_batch_size": 32,
+      "weight_decay": 0.01,
+      "warmup_fraction": 0.05,
+      "early_stopping_patience": 2
+    },
+    "effective_batch_size": 16,
+    "bf16": false,
+    "seed": 42,
+    "quick_run": false,
+    "train_examples": 18848,
+    "val_examples": 2354,
+    "test_examples": 2339,
+    "epochs_completed": 4.0,
+    "best_checkpoint": "/content/checkpoints/B_ft_flan-t5-small/checkpoint-4712",
+    "train_loss_avg": 1.3513410771439558,
+    "best_val_loss": 1.1221778392791748,
+    "test_loss": 1.110538363456726,
+    "train_minutes": 30.0,
+    "parameters": 76961152,
+    "gpu": "Tesla T4",
+    "versions": {
+      "torch": "2.11.0+cu130",
+      "transformers": "5.18.0",
+      "python": "3.13.15"
+    }
+  },
+  "aux_model_for_summary_action": "google/flan-t5-base",
+  "human_eval": null,
+  "notes": "ROUGE/BERTScore/cosine on 0-1 scale; BLEU on 0-100. All models use the same prompt and decoding settings."
+}
