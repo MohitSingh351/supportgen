@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { api } from "../api.js";
+import { IS_DEMO, api } from "../api.js";
 import { ErrorNote, Loading, PriorityTag, Tag, cap, useLoad, when } from "../components/ui.jsx";
 
 export default function History() {
@@ -14,7 +14,7 @@ export default function History() {
       <div className="page-head">
         <div>
           <h1>Ticket history</h1>
-          <p>Every analyzed ticket, newest first. Open one to see the full reply and insights.</p>
+          <p>{IS_DEMO ? "Demo data: the 10 sample tickets, with real saved model output. Open one to see the full reply and insights." : "Every analyzed ticket, newest first. Open one to see the full reply and insights."}</p>
         </div>
       </div>
       {loading && <Loading />}

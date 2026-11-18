@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { api } from "../api.js";
+import { IS_DEMO, api } from "../api.js";
 import { ErrorNote, Loading, fmt, secs, useLoad } from "../components/ui.jsx";
 
 const SAMPLE = {
@@ -70,6 +70,7 @@ export default function Compare() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
+  const demo = useLoad(() => (IS_DEMO ? api.samples() : Promise.resolve(null)));
 
   const run = async (e) => {
     e.preventDefault();
@@ -90,6 +91,16 @@ export default function Compare() {
       </div>
 
       <form className="panel" onSubmit={run}>
+        {IS_DEMO && demo.data && (
+          <div className="samples" aria-label="Sample tickets">
+            {demo.data.map((s) => (
+              <button type="button" key={s.id} className="chip-btn"
+                      onClick={() => { setSubject(s.subject); setBody(s.body); setResult(null); setError(null); }}>
+                {s.label}
+              </button>
+            ))}
+          </div>
+        )}
         <div className="field">
           <label htmlFor="c-subject">Subject</label>
           <input id="c-subject" type="text" value={subject} onChange={(e) => setSubject(e.target.value)} />
@@ -104,6 +115,9 @@ export default function Compare() {
 
       <div className="section">
         {busy && <Loading>Generating with each model. The base model downloads on first use.</Loading>}
+        {result?.saved_demo_output && (
+          <div className="alert warn" style={{ marginBottom: 12 }}>Saved output from the real models for this sample ticket.</div>
+        )}
         {result && <div className="compare-cols">{result.results.map((r) => <ResultColumn key={r.provider} r={r} />)}</div>}
       </div>
 

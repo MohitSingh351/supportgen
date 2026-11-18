@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { api } from "../api.js";
+import { IS_DEMO, api } from "../api.js";
 import TicketResult from "../components/TicketResult.jsx";
-import { ErrorNote, Loading } from "../components/ui.jsx";
+import { ErrorNote, Loading, useLoad } from "../components/ui.jsx";
 
 const MAX_CHARS = 5000;
 
@@ -29,6 +29,8 @@ export default function Analyze() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
+  const demo = useLoad(() => (IS_DEMO ? api.samples() : Promise.resolve(null)));
+  const samples = IS_DEMO ? (demo.data || []) : SAMPLES;
 
   const tooLong = body.length > MAX_CHARS;
   const submit = async (e) => {
@@ -57,7 +59,7 @@ export default function Analyze() {
       <div className="grid-2" style={{ alignItems: "start" }}>
         <form className="panel" onSubmit={submit}>
           <div className="samples" aria-label="Sample tickets">
-            {SAMPLES.map((s) => (
+            {samples.map((s) => (
               <button type="button" key={s.label} className="chip-btn"
                       onClick={() => { setSubject(s.subject); setBody(s.body); setError(null); }}>
                 {s.label}
@@ -99,11 +101,15 @@ export default function Analyze() {
 
         <div>
           {busy && <div className="panel"><Loading>Generating the reply and running the classifiers…</Loading></div>}
+          {!busy && result && result.saved_demo_output && (
+            <div className="alert warn" style={{ marginBottom: 12 }}>Saved output: this is what our models produced for
+              this sample ticket when we ran them. In the full app it is generated live.</div>
+          )}
           {!busy && result && <TicketResult ticket={result} />}
           {!busy && !result && (
             <div className="panel empty">
               <p>The suggested reply and ticket insights will appear here.</p>
-              <p className="small">Try one of the sample tickets to see it in action.</p>
+              <p className="small">{IS_DEMO ? "Pick a sample ticket, then click Analyze ticket." : "Try one of the sample tickets to see it in action."}</p>
             </div>
           )}
         </div>

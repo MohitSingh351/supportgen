@@ -1,4 +1,6 @@
 // Thin wrapper around the Django REST API (proxied to :8000 by Vite in development).
+import { demoApi } from "./demoApi.js";
+
 const BASE = import.meta.env.VITE_API_BASE || "/api";
 
 function messageFrom(data, status) {
@@ -30,7 +32,8 @@ async function request(path, options = {}) {
   return data;
 }
 
-export const api = {
+const liveApi = {
+  isDemo: false,
   health: () => request("/health/"),
   analyze: (subject, body) =>
     request("/tickets/analyze/", { method: "POST", body: JSON.stringify({ subject, body }) }),
@@ -42,3 +45,7 @@ export const api = {
     request("/compare/", { method: "POST", body: JSON.stringify({ subject, body, providers }) }),
   plotUrl: (key) => `${BASE}/evaluation/plots/${key}/`,
 };
+
+// VITE_DEMO=1 builds the read-only demo (static data, no backend); see demoApi.js.
+export const IS_DEMO = import.meta.env.VITE_DEMO === "1";
+export const api = IS_DEMO ? demoApi : liveApi;

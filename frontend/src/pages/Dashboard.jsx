@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { api } from "../api.js";
+import { IS_DEMO, api } from "../api.js";
 import { DistributionBars, Lines } from "../components/charts.jsx";
 import { ErrorNote, Loading, PriorityTag, Tag, fmt, pct, useLoad, when } from "../components/ui.jsx";
 
@@ -45,7 +45,9 @@ export default function Dashboard() {
       <div className="page-head">
         <div>
           <h1>Dashboard</h1>
-          <p>Every ticket analyzed in SupportGen, with the predicted category, priority, type and sentiment.</p>
+          <p>{IS_DEMO
+            ? "Demo data: the 10 sample tickets, analysed by the real models. In the full app this shows every ticket analysed."
+            : "Every ticket analyzed in SupportGen, with the predicted category, priority, type and sentiment."}</p>
         </div>
         <Link to="/analyze" className="btn" style={{ textDecoration: "none" }}>Analyze a ticket</Link>
       </div>
