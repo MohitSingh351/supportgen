@@ -22,7 +22,7 @@ function Training({ tc, log }) {
           <dl className="facts">
             <dt>Base model</dt><dd>{tc.base_model} ({(tc.parameters / 1e6).toFixed(1)}M parameters, all trainable)</dd>
             <dt>Data</dt><dd className="num">{tc.train_examples?.toLocaleString()} train, {tc.val_examples?.toLocaleString()} validation, {tc.test_examples?.toLocaleString()} test</dd>
-            <dt>Epochs</dt><dd className="num">{tc.epochs_completed} (early stopping on validation loss)</dd>
+            <dt>Epochs</dt><dd className="num">{tc.epochs_completed} (all epochs run, validation loss checked after each)</dd>
             <dt>Learning rate</dt><dd className="num">{hp.learning_rate}, linear schedule, {pct(hp.warmup_fraction)} warm-up</dd>
             <dt>Batch size</dt><dd className="num">{tc.effective_batch_size}</dd>
             <dt>Max lengths</dt><dd className="num">{tc.max_input_len} input tokens, {tc.max_target_len} output tokens</dd>

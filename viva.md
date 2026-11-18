@@ -15,6 +15,7 @@ Short, direct answers to the questions an examiner is likely to ask. All numbers
 | BERTScore F1 | 0.867 → **0.899** (rescaled 0.210 → 0.403) |
 | LLM judge overall | 1.59 → **4.03** out of 5; fine-tuned preferred on 50 of 50 |
 | Classifier accuracy | type 0.88 · priority 0.64 · queue 0.62 |
+| Model size / speed | 77.0M parameters, 310 MB on disk · 1.60 s per reply on a T4 GPU · ~1 s on an M4 Mac CPU |
 
 ---
 
@@ -28,6 +29,10 @@ Short, direct answers to the questions an examiner is likely to ask. All numbers
 7. [Backend, frontend and system design](#7-backend-frontend-and-system-design)
 8. [Limitations, ethics and future work](#8-limitations-ethics-and-future-work)
 9. [Tricky questions](#9-tricky-questions)
+10. [Model choice: why FLAN-T5-small, and what else was tried](#10-model-choice-why-flan-t5-small-and-what-else-was-tried)
+11. [Explaining the Model evaluation page, section by section](#11-explaining-the-model-evaluation-page-section-by-section)
+12. [Explaining failure cases from the live demo](#12-explaining-failure-cases-from-the-live-demo)
+13. [More questions examiners often ask](#13-more-questions-examiners-often-ask)
 
 ---
 
@@ -162,6 +167,8 @@ Full fine-tuning, meaning all ~77M weights are updated. The model is small enoug
 
 **Q30. Why only 4 epochs?**
 The gains were getting small: validation loss went 1.272 → 1.178 → 1.137 → 1.122 over the four epochs, so the last epoch improved it by only 0.015. More epochs would give little benefit while risking overfitting and even more formulaic replies, and 4 epochs fit comfortably within Colab's session limits. Training longer is a reasonable experiment for future work.
+
+*Be precise if asked about early stopping:* early stopping (patience 2) was configured, but the training log shows the Trainer disabled it because `metric_for_best_model` was not set. All 4 epochs ran. Validation loss improved every epoch, so early stopping would not have stopped training anyway, and the result is the same.
 
 **Q31. Why did you use FP32 and not mixed precision?**
 The T4 GPU does not support bf16, and fp16 is known to be unstable for T5 (it can produce NaN losses). So training ran in fp32. The notebook enables bf16 automatically on newer GPUs such as the A100 or L4.
@@ -353,7 +360,9 @@ Partly length is involved: the base model's replies are much shorter (18 vs 60 w
 Very unlikely. We split by near-duplicate groups and audited val and test against training for leakage. Also, test loss (1.111) is close to validation loss (1.122), which is consistent with generalisation rather than memorisation.
 
 **Q67. Why did you use Claude as a judge when you compare against Gemini?**
-The judge must be independent of the models being compared. Claude did not generate any of the A or B replies, the replies were blinded and shuffled, and a fixed rubric was used. Gemini was not part of the judged set.
+The judge must be independent of the models being compared. Claude did not generate any of the A or B replies, the replies were blinded and shuffled, and a fixed rubric was written before rating. Gemini was not part of the judged set.
+
+Be honest about the caveats, which the Evaluation page also lists: there is a single AI rater, it may favour longer or more polite replies, Claude was also used as an assistant while building this project, and blinding is imperfect because the fine-tuned model's style is easy to recognise. That is why it complements the automatic metrics rather than replacing a human study.
 
 **Q68. Why not just use ChatGPT or Gemini for everything?**
 Cost per request, latency, dependence on an internet connection and a third-party service, and privacy, because customer data would leave the company. A small fine-tuned model runs on a normal laptop, costs nothing per request and can be fully controlled and audited. The project also demonstrates the GenAI pipeline end to end instead of wrapping an API.
@@ -363,3 +372,341 @@ The model was trained only on English, so quality would drop sharply. It might r
 
 **Q70. What did you personally learn from this project?**
 The full GenAI lifecycle: careful data preparation (especially avoiding leakage), fine-tuning a Transformer, evaluating it with several complementary metrics and significance tests, being honest about failure modes, and turning a model into a usable application with sensible engineering such as model caching, fallbacks and error handling.
+
+---
+
+## 10. Model choice: why FLAN-T5-small, and what else was tried
+
+**Q71. Why did you use only FLAN-T5-small? Why not a bigger or different model?**
+It was a deliberate choice that fits the task, the hardware and the goal:
+1. **The right architecture.** Reply generation is "read an input, write an output", which is exactly what an encoder-decoder model is built for.
+2. **Already instruction-tuned.** FLAN-T5 already follows instructions, so a small dataset and a short training run are enough to adapt it.
+3. **Fits the free hardware.** Full fine-tuning of 77M parameters takes about 30 minutes on Colab's free T4 GPU and needs only about 441 MB of GPU memory to generate.
+4. **Runs on a laptop.** About 1 second per reply on a Mac CPU, with no GPU, no API key and no cost per request. Customer data stays on the machine.
+5. **A clean experiment.** Using the same model before and after fine-tuning (A vs B) means any improvement comes from our training, not from a different model.
+
+The trade-off is quality: a larger model would make fewer factual mistakes. We accept that and list it as a limitation.
+
+**Q72. Did you try other models?**
+Be precise. This is what was actually done:
+
+| Component | What was compared |
+|---|---|
+| Reply generation | **Base FLAN-T5-small (A)** vs **fine-tuned FLAN-T5-small (B)** on the same 500 test tickets. Notebook 03 is also set up to fine-tune **FLAN-T5-base (~248M, "Model D")**, and notebook 06 can add **Gemini** as a benchmark, but neither was run, because of Colab GPU time limits and to keep the project free of paid APIs. |
+| Classifiers | **Logistic Regression vs Linear SVM**, each with several values of the regularisation strength C, chosen by validation macro-F1. Linear SVM with C = 4 won for all three targets (validation macro-F1: queue 0.666 vs 0.587 for logistic regression; priority 0.677 vs 0.637; type 0.884 vs 0.869). |
+| Summary and action | **Zero-shot FLAN-T5-base** was tested in notebook 04. It mostly repeated the subject line, so we added an extractive fallback for the summary and switched the action to rules. |
+| Sentiment | A pretrained RoBERTa sentiment model, used as-is (there are no labels to train or compare against). |
+
+So the honest answer is: "We compared base vs fine-tuned FLAN-T5-small, and two classifier families with hyperparameter search. FLAN-T5-base and Gemini are prepared in the pipeline but were not run; they are the next experiments."
+
+**Q73. Why not GPT-2 or another decoder-only model?**
+GPT-2 is not instruction-tuned and, at a similar size (124M), it tends to wander off topic and is harder to control. Decoder-only models also treat the ticket and the reply as one long sequence, whereas an encoder-decoder model reads the whole ticket in both directions first and then generates. For short input → output tasks at small sizes, T5-style models are a strong, standard choice.
+
+**Q74. Why not BART?**
+BART is also a good encoder-decoder model and would be a fair alternative. FLAN-T5 has the advantage of instruction tuning on more than 1,000 tasks, so it understands a prompt such as "Generate a professional customer support response" from the start. BART-base is not instruction-tuned.
+
+**Q75. Why not fine-tune Llama, Mistral or another modern LLM?**
+A 7B-parameter model is about 90 times larger than FLAN-T5-small. Even with LoRA and 4-bit quantisation, it needs a bigger GPU, takes hours to train, and is slow on a laptop CPU. That would also make the before/after effect of fine-tuning harder to show within the course's time and budget. It is a natural next step with more compute.
+
+**Q76. Why not just use Gemini or GPT with a good prompt (prompt engineering) instead of fine-tuning?**
+1. The course goal is to build and evaluate the GenAI pipeline ourselves, not to call an API.
+2. A large API model costs money for every request, needs the internet and sends customer data to a third party.
+3. A prompted general model does not know a company's reply style. Fine-tuning teaches it the style and structure from real examples.
+
+We kept Gemini as an *optional* benchmark so a comparison is possible without the app depending on it.
+
+**Q77. Why FLAN-T5-*base* for the summary but *small* for the reply?**
+The summary task was not trained (there are no reference summaries), so it relies entirely on the model's existing ability, and the larger base model is better at zero-shot tasks. The reply task *was* trained, so the small model is good enough after fine-tuning, and it is faster.
+
+**Q78. Why TF-IDF + SVM and not BERT for classification?**
+It is a strong and fast baseline for short texts. It trains in seconds, predicts in about 3 ms and is easy to explain. It also beats the majority baseline by a wide margin on every target. A fine-tuned DistilBERT or DeBERTa would probably help most where meaning matters more than keywords (the laptop/returns and pricing/sales errors), and it is listed as future work.
+
+**Q79. Why `twitter-roberta-base-sentiment-latest` for sentiment?**
+It is a widely used, well-documented RoBERTa model trained on about 124M tweets, with three classes (negative, neutral, positive). Tweets, like support tickets, are short, informal texts written by customers. The dataset has no sentiment labels, so we use it as an *inferred* signal only.
+
+**Q80. Why roberta-large for BERTScore and MiniLM for cosine similarity?**
+These are the standard defaults. `roberta-large` is the default BERTScore model for English and correlates well with human judgement. `all-MiniLM-L6-v2` is a fast, popular sentence-embedding model for measuring similarity. Using standard choices makes the results comparable with other work.
+
+**Q81. If you trained FLAN-T5-base, what would you expect?**
+Better grammar, better handling of negation and fewer invented facts, probably with higher ROUGE and BERTScore. Training would take roughly 3–4 times longer (it has about 3 times the parameters), and generation would also be slower. The notebook already supports this: set `MODEL_NAME = "google/flan-t5-base"` and re-run notebook 03. This is a prediction, not a measured result.
+
+---
+
+## 11. Explaining the Model evaluation page, section by section
+
+Use this as a script when the examiner opens the **Model evaluation** page. Every number on the page is read from `results/` (the Colab export); the app does not compute or edit any of them.
+
+### 11.1 Fine-tuning (top of the page)
+
+**What it shows:** the training setup on the left and the loss curves on the right.
+
+| Item | Value | How to explain it |
+|---|---|---|
+| Base model | google/flan-t5-small, 77.0M parameters, all trainable | Full fine-tuning: every weight was updated |
+| Data | 18,848 train / 2,354 val / 2,339 test | Leakage-safe split from notebook 01 |
+| Epochs | 4 (all epochs run, validation loss checked after each) | Early stopping was configured, but the Trainer disabled it, so all 4 epochs ran (see Q30) |
+| Learning rate | 3e-4, linear schedule, 5% warm-up | Warm-up: the learning rate rises slowly for the first 5% of steps, so the large early updates do not damage the pretrained weights. After that it decreases linearly to 0. |
+| Batch size | 16 | 16 ticket-reply pairs per step |
+| Max lengths | 160 input / 128 output tokens | 4.1% of inputs and 5.0% of answers are cut at these limits |
+| Decoding | Beam search (4 beams), no repeated 3-grams | See Q15 |
+| Hardware | Tesla T4, 30 minutes | Free Colab GPU |
+| Best validation loss | 1.122 (perplexity 3.07) | Perplexity = e^loss |
+| Test loss | 1.111 (perplexity 3.04) | Almost equal to validation loss, so the model generalises |
+
+**Loss curves:**
+- The training loss (the continuous line) starts at about 2.9 and falls quickly in the first few hundred steps as the model learns the reply format, then slowly to about 1.3.
+- The validation loss (dots, one per epoch) falls every epoch: 1.272 → 1.178 → 1.137 → 1.122.
+- **What to say:** "Validation loss never goes up, so there is no overfitting. The gap between training and validation is small. The curve is flattening, so more epochs would give only small gains."
+
+### 11.2 Response quality: before vs after fine-tuning
+
+**What it shows:** a bar chart and a table comparing base (A) and fine-tuned (B) on the same 500 test tickets.
+
+| Metric | Base | Fine-tuned | Meaning |
+|---|---|---|---|
+| ROUGE-1 | 0.205 | **0.474** | Word overlap with the real reply more than doubles |
+| ROUGE-2 | 0.080 | **0.240** | Word-pair overlap triples, so phrases match, not just single words |
+| ROUGE-L | 0.158 | **0.343** | Longest matching word sequence: the structure is closer to real replies |
+| BLEU (0–100) | 1.17 | **19.57** | Exact n-gram precision. Harsh for open-ended text; about 20 is reasonable when many answers are correct. |
+| BERTScore F1 | 0.867 | **0.899** | Meaning similarity. The raw scale is compressed, so the change looks small. |
+| BERTScore F1 (rescaled) | 0.210 | **0.403** | The same score, spread out against a baseline: almost doubled |
+| Semantic cosine | 0.580 | **0.781** | Whole-sentence meaning similarity |
+| Distinct-2 (variety) | 0.554 | **0.162** | *Lower* after fine-tuning: replies are more repetitive (a limitation, see Q41) |
+| Average words per reply | 18.5 | **67.8** | References average 60 words, so the fine-tuned length is right; the base model is far too short |
+
+**What to say:** "Every quality metric improves, both word-based and meaning-based. The one that gets worse is variety, which is the cost of learning one company's reply style."
+
+### 11.3 Is the improvement statistically significant? (table)
+
+For each metric the table shows the mean improvement, its 95% confidence interval, the p-value and the share of tickets where B beat A:
+
+| Metric | Mean difference | 95% CI | p-value | B better on |
+|---|---|---|---|---|
+| ROUGE-1 | +0.269 | 0.253 to 0.284 | 2.7e-76 | 92.0% of tickets |
+| ROUGE-2 | +0.160 | 0.147 to 0.172 | 3.2e-69 | 88.4% |
+| ROUGE-L | +0.185 | 0.171 to 0.198 | 1.1e-68 | 87.8% |
+| BERTScore F1 | +0.033 | 0.030 to 0.035 | 3.0e-63 | 85.4% |
+| Semantic cosine | +0.202 | 0.180 to 0.224 | 1.2e-56 | 82.2% |
+
+How to explain the columns:
+- **Mean difference:** the average of (B's score − A's score) over the 500 tickets.
+- **95% CI (bootstrap, 2,000 resamples):** we resampled the 500 tickets with replacement 2,000 times and recomputed the mean difference each time. 95% of those means fall in this range. **The range never includes 0**, so the improvement is real.
+- **p-value (paired Wilcoxon signed-rank test):** the probability of seeing a difference this large if fine-tuning had no effect. A value like 1e-76 is effectively zero. It is *paired* because both models answered the same tickets, and *non-parametric* because the scores are not normally distributed.
+- **B better on:** fine-tuning is not only better on average; it is better on most individual tickets.
+
+### 11.4 AI-judge evaluation (LLM-as-a-judge)
+
+**What it shows:** Claude rated 50 blinded ticket pairs from 1 to 5 on five criteria.
+
+| Criterion | Base | Fine-tuned |
+|---|---|---|
+| Relevance | 1.48 | **4.34** |
+| Correctness | 1.10 | **3.58** |
+| Fluency | 3.30 | **4.68** |
+| Professional tone | 1.08 | **4.74** |
+| Helpfulness | 1.00 | **2.82** |
+| Overall (mean) | 1.59 | **4.03** |
+
+- **Head to head:** fine-tuned rated higher on 50 of 50 tickets, base on 0, no ties (Wilcoxon p = 7.2e-10).
+- **Not a support reply:** base 46 of 50, fine-tuned 0 of 50.
+- **Correctness ≤ 2:** base 49, fine-tuned 5.
+
+**What to say:**
+- "The base model's fluency (3.30) is not bad. It writes proper English, but it doesn't write *support replies*: tone 1.08, helpfulness 1.00. Fine-tuning taught it the task, not the language."
+- "Helpfulness (2.82) is the weakest score for our model, because without company data it can only ask for details or offer a call. RAG would fix this."
+
+**"Where the fine-tuned model went wrong":** the 5 low-correctness cases fall into two types:
+- **Role confusion (2 cases):** the model asks the customer for information the customer had asked support for, such as the API version or the update details.
+- **Hallucination (3 cases):** it asserts things it cannot know, such as a HIPAA certification, a list of services, or payment gateway support and discounts.
+
+**Caveats shown on the page:** a single AI rater; it may prefer longer or more polite replies; Claude also helped build the project; blinding is imperfect. See Q39 and Q67.
+
+### 11.5 Size and speed
+
+| Item | Value | How to explain it |
+|---|---|---|
+| Parameters | 77.0M | Small: about 1/90 of a 7B LLM |
+| Size on disk | 310 MB | Stored as fp32: 77M × 4 bytes ≈ 308 MB |
+| Per reply on a T4 GPU | 1.60 s (p95: 2.12 s) | One ticket at a time, beam search with 4 beams |
+| Per reply on a Colab CPU | 4.96 s | Colab's CPU is slow. On an M4 Mac the app takes about 0.5–1.5 s. |
+| Peak GPU memory | 441 MB | Fits on almost any GPU |
+
+**What to say:** "It is small and fast enough to run on an ordinary laptop with no API, which is the practical advantage over a large hosted LLM."
+
+### 11.6 Supporting classifiers
+
+| Target | Accuracy | Macro-F1 | Weighted F1 | Majority-class macro-F1 | Weakest class |
+|---|---|---|---|---|---|
+| Category (queue) | 0.620 | **0.593** | 0.611 | 0.044 | General Inquiry (F1 0.45) |
+| Priority | 0.643 | **0.580** | 0.622 | 0.195 | low (F1 0.37) |
+| Ticket type | 0.881 | **0.871** | 0.876 | 0.141 | Problem (F1 0.67) |
+
+How to explain the columns:
+- **Macro-F1** (highlighted) is the main score: the average F1 over all classes, each counted equally, so small classes matter.
+- **Weighted F1** weights each class by how many tickets it has, so it is closer to accuracy.
+- **Majority-class macro-F1** is the score of a "model" that always predicts the most common class. Ours is 4 to 13 times higher.
+- **Weakest class** shows where to improve.
+
+Key observations:
+- **Queue: high precision, low recall.** Macro precision is 0.81 but macro recall only 0.52. When the classifier predicts a small queue it is usually right (General Inquiry precision 1.00), but it often misses those tickets and puts them in large queues (General Inquiry recall 0.29). It is cautious because the large queues dominate.
+- **Priority "low" recall is 0.24.** Most low-priority tickets are predicted as medium. Urgency is weakly visible in the words, and the synthetic labels are partly arbitrary.
+- **Type works well** (0.88): words like "please change", "request" and "error" signal the type directly. *Problem* vs *Incident* is the main confusion, because both describe something broken.
+
+**Confusion matrices (three images):**
+- Rows are the **true** class and columns the **predicted** class. They are row-normalised, so each row adds up to 100%.
+- The **diagonal** is the share predicted correctly; a darker diagonal is better.
+- Off-diagonal cells show which classes get mixed up. For queue, these are mostly the overlapping support queues (Technical / IT / Product Support, Customer Service).
+
+**Sentiment line under the matrices:** on 500 test tickets the pretrained model predicted 55% negative, 28% neutral and 17% positive. This is not evaluated (there are no labels); it only shows that the predictions are plausible for complaint tickets.
+
+### 11.7 Dataset preparation
+
+| Cleaning step | Rows left |
+|---|---|
+| Raw (all files, all languages) | 61,765 |
+| English only | 28,261 |
+| Non-empty body and answer | 28,254 |
+| Body and answer ≥ 20 characters | 28,154 |
+| Drop exact duplicate bodies | 23,557 |
+
+- **Final split:** 18,848 train, 2,354 val, 2,339 test.
+- **Near-duplicate groups:** tickets with cosine similarity ≥ 0.9 were grouped. 770 tickets were in groups of two or more (the largest group had 5), and each group was kept within one split.
+- **Leakage audit:** 8 validation and 8 test tickets were removed for being too close to a training ticket. After removal, the mean similarity of test tickets to their closest training ticket is 0.54, so the test set is genuinely new.
+- **Truncation:** 4.1% of inputs and 5.0% of answers are longer than the token limits and get cut. That is a small share, chosen as a trade-off for training speed.
+
+### 11.8 Example replies
+
+Random test tickets shown in four columns: ticket, reference (the real agent answer), base output and fine-tuned output.
+- **What to point out:** the base output is short, often repeats the ticket or speaks *as the customer*. The fine-tuned output has the structure of a real support reply: greeting, empathy, a request for details, next steps.
+- **Note on placeholders:** this table shows *raw* model output, so you will see `tel_num>` instead of `<tel_num>`. T5's vocabulary has no `<` character. The live app repairs these to `[Phone]` and similar (see Q52).
+
+### 11.9 Limitations (bottom of the page)
+
+The six points listed on the page, each with a one-line explanation:
+1. **Formulaic replies:** distinct-2 falls from 0.55 to 0.16, and many replies offer a call. The model copies the dataset's most common pattern.
+2. **Part of the ROUGE gain comes from length:** the base model writes 18 words, the fine-tuned 68 and the references 60. Meaning-based metrics and the AI judge confirm the gain is not *only* length (see Q65).
+3. **Hallucination:** the model can state facts that contradict the ticket, so every reply is a draft.
+4. **Synthetic data:** the results show adaptation to this dataset's domain and style, not to a real company.
+5. **Summary and action have no ground truth.** Zero-shot output was poor, so the app uses fallbacks and labels the source.
+6. **No human evaluation yet:** quality beyond automatic metrics was judged by an AI rater. A human rating sheet is prepared.
+
+### 11.10 The Model comparison page (offline benchmark table)
+
+At the bottom of **Model comparison**, the same metrics are shown on a separate 100-ticket comparison set (notebook 06):
+
+| Metric | Base | Fine-tuned |
+|---|---|---|
+| ROUGE-1 | 0.223 | **0.483** |
+| ROUGE-L | 0.177 | **0.351** |
+| BLEU | 1.28 | **20.15** |
+| BERTScore F1 (rescaled) | 0.225 | **0.408** |
+| Semantic cosine | 0.613 | **0.787** |
+| Average words per reply | 19.4 | **66.0** |
+
+**Q82. Why are these numbers slightly different from the Evaluation page?**
+They come from a different sample: 100 comparison tickets instead of 500 test tickets. The values are very close (ROUGE-L 0.351 vs 0.343), which shows the result is stable across samples. There is no Gemini column because no API key was configured.
+
+---
+
+## 12. Explaining failure cases from the live demo
+
+These come from `TESTING.md` (cases marked ⚠). If the examiner tries their own ticket and gets a strange output, explain it calmly with the same reasoning.
+
+**Q83. The reply to "Refund not received" says "the refund you received". Why?**
+Small models handle negation poorly. "Refund" + "received" appears often in the training replies, and the "not" in the ticket loses out. This is a known weakness of small seq2seq models. Fixes: a larger model, training examples that contain negation, and an automatic check that warns the agent when the ticket says "not received" but the reply says "received".
+
+**Q84. A damaged laptop was classified as "IT Support", not "Returns and Exchanges". Why?**
+TF-IDF only counts words; it doesn't understand meaning. "Laptop" appears mostly in IT tickets, and the classifier cannot tell that "return it and get a replacement" is the real intent. Its confidence was only 28%, which is a sign of uncertainty. Fixes: a Transformer classifier that understands context, and a rule that marks low-confidence predictions for manual routing.
+
+**Q85. A pricing question was put in "Billing" and the reply mentioned plans that don't exist. Why?**
+- **Classification:** "pricing" and "plan" are typical Billing words in this dataset.
+- **Reply:** the model has no company information, so it fills the gap with plausible text. That is *hallucination*.
+
+Fix: **RAG**, which retrieves the real pricing page and gives it to the model, so the reply is grounded in facts. This is exactly why the app shows every reply as a draft for human review.
+
+**Q86. A thank-you message got an apology reply and "High" priority. Why?**
+This is **training-data bias**: almost every ticket in the dataset is a problem, so the model has never learned to answer a compliment. The sentiment model correctly said *Positive*, which shows the components disagree. Fixes: add non-complaint examples to the training data, or use a separate "thank you" reply when sentiment is strongly positive.
+
+**Q87. An HR request was classified as "Technical Support". Why?**
+Human Resources is a small class: 46 of 2,339 test tickets (2%). The classifier finds only 43% of HR tickets (recall 0.43), although it is almost always right when it does predict HR (precision 0.95). Small classes are hard even with class balancing. Fixes: more HR data, data augmentation, a Transformer classifier, and low-confidence routing (the confidence here was only 32%).
+
+**Q88. Why are some confidence scores so low (20–30%)?**
+With 10 queue classes, the probability is shared among them, so even the best class can be at 20–30%. The scores come from `CalibratedClassifierCV`, which turns SVM scores into calibrated probabilities. A low score is useful: it tells the agent "check this one". A future version could highlight predictions below a threshold.
+
+---
+
+## 13. More questions examiners often ask
+
+**Q89. What is the difference between training, validation and test loss?**
+All three are the same cross-entropy loss computed on different data. Training loss is on the data the model learns from. Validation loss is on held-out data used during training to monitor progress. Test loss is on data used only once at the end. Ours: training about 1.35 (averaged over all training steps), validation 1.122, test 1.111.
+
+**Q90. Why is the training loss *higher* than the validation loss?**
+The reported training loss (1.351) is an *average over the whole run*, including the early steps when the loss was about 2.9. The validation loss is measured at the end of each epoch, after learning. Training loss also includes dropout, which is switched off during evaluation. At the end of training, the two are close.
+
+**Q91. What is weight decay? What did you use?**
+A regulariser that slightly shrinks the weights at every step so they don't grow too large, which reduces overfitting. We used 0.01, the standard value for AdamW.
+
+**Q92. What is AdamW?**
+Adam is an optimiser that adapts the learning rate of each weight using running averages of its gradients and squared gradients. AdamW applies weight decay *separately* from the gradient update, which works better than mixing it into the gradient as plain Adam does. It is the standard optimiser for fine-tuning Transformers.
+
+**Q93. What is the random seed for, and what was yours?**
+It fixes the random choices (data shuffling, weight initialisation of new layers, dropout) so the experiment can be repeated with the same result. We used seed 42.
+
+**Q94. Why evaluate generation on 500 test tickets and not all 2,339?**
+Generating with beam search and computing BERTScore with roberta-large is slow. 500 tickets is enough for a tight estimate: the 95% confidence interval for the ROUGE-1 improvement is only ±0.016 wide. The classifiers, which are fast, were evaluated on all 2,339 test tickets.
+
+**Q95. Why only 50 tickets for the AI judge?**
+Each rating requires reading a ticket and two replies against a detailed rubric. 50 pairs is enough for a clear result: the fine-tuned model won all 50, and p = 7.2e-10.
+
+**Q96. What is the difference between precision and recall?**
+- **Precision:** of the tickets we *predicted* as class X, how many really are X.
+- **Recall:** of the tickets that *really are* class X, how many we found.
+- **F1:** the harmonic mean of the two, which is high only when both are high.
+
+Example: General Inquiry has precision 1.00 but recall 0.29, so it is always right when it predicts General Inquiry but finds only 29% of them.
+
+**Q97. What is hallucination in LLMs?**
+When a model generates fluent text that is not supported by the input or by facts, such as an invented policy or a wrong detail. It happens because the model learns to produce *likely* text, not *true* text. Ways to reduce it: RAG (grounding in documents), larger models, constrained decoding, and human review.
+
+**Q98. What is RAG, and how would it fit into SupportGen?**
+Retrieval-Augmented Generation. Before generating, the system searches a knowledge base (policies, FAQs, past resolved tickets) for passages relevant to the ticket and adds them to the prompt. The model then writes its reply from real information. In SupportGen this would mean: embed the ticket → retrieve the top 3 similar resolved tickets or policy passages → put them in the prompt → generate.
+
+**Q99. What is LoRA?**
+Low-Rank Adaptation. It freezes the original weights and adds small trainable matrices to the attention layers: a weight update is expressed as the product of two thin matrices (rank r, e.g. 8). Only about 0.1–1% of the parameters are trained, which saves a lot of memory and makes large models trainable on a small GPU. We didn't need it, because full fine-tuning of 77M parameters fits easily.
+
+**Q100. What is catastrophic forgetting? Did it happen here?**
+When fine-tuning on a narrow task makes a model lose general abilities it had before. Our fine-tuned model is used only for support replies, so losing other abilities doesn't matter here. The lower variety (distinct-2) is a mild sign that the model has narrowed to one style. That's also why the summary uses the separate, untouched FLAN-T5-base.
+
+**Q101. What is temperature, and why didn't you use it?**
+Temperature scales the probabilities before sampling. Low values (< 1) make output more predictable; high values (> 1) make it more random. It only matters when *sampling*. We used beam search, which is deterministic, because support replies should be consistent and the same ticket should always give the same draft.
+
+**Q102. What is the difference between instruction tuning and fine-tuning?**
+Instruction tuning (what Google did to make FLAN-T5) trains a model on many different tasks written as instructions, so it becomes good at *following instructions in general*. Our fine-tuning trains it on *one* task (support replies) so it becomes good at that specific job and style.
+
+**Q103. What is RLHF, and why didn't you use it?**
+Reinforcement Learning from Human Feedback: humans rank model outputs, a reward model learns those preferences, and the language model is optimised against it. It is how chat assistants are aligned. It needs large amounts of human preference data and much more compute. Supervised fine-tuning on good example replies is the right first step for a project of this size. In a real deployment, agents' edits to the drafts could become preference data later.
+
+**Q104. How would you deploy this for a real company?**
+- Package the backend and models in Docker and serve the model with a GPU inference server (or ONNX/quantised on CPU).
+- Put Django behind Gunicorn and Nginx, and serve the built React app as static files.
+- Add authentication for agents and HTTPS.
+- Integrate with the helpdesk (Zendesk, Freshdesk) via its API so drafts appear inside the agent's tool.
+- Log agents' edits to measure quality and collect training data, and monitor latency and errors.
+
+**Q105. How would you know whether it works in real use?**
+Track online metrics: the share of drafts sent with few or no edits (edit distance between draft and sent reply), time saved per ticket, customer satisfaction (CSAT) scores, and the share of routing predictions agents had to change. Run an A/B test with and without drafts.
+
+**Q106. What if the data changes over time (new products, new policies)?**
+That is *data drift*. Monitor the edit rate and classifier confidence; when they get worse, retrain on recent tickets. RAG helps a lot here, because updating the knowledge base updates the facts immediately without retraining.
+
+**Q107. How much training data would you need for a new company?**
+We used about 19k pairs. Because FLAN-T5 is already instruction-tuned, a few thousand good ticket-reply pairs would likely be enough to learn the style. Quality matters more than quantity: clean, correct, varied replies. This is an estimate; it should be checked with a learning curve (train on 1k, 5k, 10k and compare).
+
+**Q108. Is the project reproducible?**
+Yes. The notebooks run top to bottom on Colab with a fixed seed (42), pinned library versions (`transformers` 5.18.0, `scikit-learn` 1.6.1), a recorded configuration (`training_config.json`) and all metrics exported to `results/`. The web app reads those files directly, so the numbers shown are exactly what the notebooks produced.
+
+**Q109. What was the hardest part of the project?**
+A good honest answer: making the evaluation trustworthy. That meant finding the exact and near-duplicate tickets that would have leaked into the test set, choosing metrics that capture meaning and not only word overlap, adding significance tests, and documenting where the model fails instead of hiding it. A technical surprise was the `<tel_num>` placeholder issue caused by T5's vocabulary having no `<` character.
+
+**Q110. What makes your project different from a ChatGPT wrapper?**
+We own every step: data cleaning and leakage-safe splitting, fine-tuning the model weights, evaluation with five metrics plus significance tests and an AI judge, and a local deployment where the model runs on our machine. A wrapper only sends a prompt to someone else's model and has nothing to measure or improve.
