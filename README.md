@@ -164,7 +164,7 @@ Claude (`claude-opus-5-5`) rated anonymised, shuffled replies from 1 to 5 using 
 
 All three beat the baselines clearly. Queue and priority are harder because several queues overlap in meaning and priority is partly subjective.
 
-Plots (loss curves, confusion matrices, metric box plots, label distributions) are in `results/plots/`, and the app's Evaluation page displays them.
+Plots (loss curves, confusion matrices, metric box plots, label distributions) are in `results/plots/`. The app's Evaluation page draws the loss curves and metric charts from the result files and explains the classifier scores in plain language. The significance tables and confusion matrices stay in `results/` for the report.
 
 ---
 
@@ -207,10 +207,11 @@ Located in `frontend/` (React + Vite). In development, the Vite dev server forwa
 | Page | What it shows |
 |---|---|
 | **Dashboard** | Totals and distributions of analysed tickets (category, priority, type, inferred sentiment), recent tickets and the model's headline metrics |
+| **How it works** | The whole project on one page in plain language: the problem, the 4-part pipeline, the data, training (with a real before/after reply), what happens on "Analyze", headline results, the pages and the limits. Good for presenting. |
 | **Analyze ticket** | Paste a ticket and get the fine-tuned reply, summary, recommended action, category, priority, type and sentiment |
 | **Ticket history** | Every analysed ticket, with a detail view |
 | **Model comparison** | Live: one ticket through base FLAN-T5, fine-tuned FLAN-T5 and Gemini (if configured), plus the offline benchmark |
-| **Model evaluation** | Training setup, loss curves, all metrics with significance tests, classifier metrics and confusion matrices, dataset preparation, example replies and limitations |
+| **Model evaluation** | Training setup, loss curves, before/after reply metrics, AI-judge scores, classifier metrics with an easy explanation of macro-F1, dataset preparation, example replies and limitations |
 
 ---
 
@@ -308,7 +309,7 @@ Open **<http://localhost:5173>** in a browser.
 
 A 5–7 minute walkthrough. **Before the audience arrives**, start both servers and analyse one ticket so the models are already loaded and downloaded.
 
-**1. The problem (30 s).** "Support agents answer hundreds of similar tickets. SupportGen reads a ticket and drafts the reply, tags it and suggests what to do next, so the agent only reviews and edits."
+**1. The problem and the pipeline (1 min).** Open **How it works**. "Support agents answer hundreds of similar tickets. SupportGen reads a ticket and drafts the reply, tags it and suggests what to do next, so the agent only reviews and edits." Walk through the four boxes (Data → Training → Backend → Website) and the before/after reply.
 
 **2. Analyze a ticket (2 min).** Open **Analyze ticket** and paste:
 
@@ -322,7 +323,7 @@ Point out the draft reply, the predicted category (*Billing and Payments*), prio
 
 **3. Show the effect of training (2 min).** Open **Model comparison** and run the same ticket. The **base model** usually returns a short or off-topic sentence; the **fine-tuned model** writes a proper support reply. "Same model, same size; the only difference is our fine-tuning."
 
-**4. Show the evidence (1.5 min).** Open **Model evaluation**: the loss curves (training worked and did not overfit), ROUGE-L more than doubling (0.158 → 0.343), BLEU 1.2 → 19.6, the LLM judge preferring the fine-tuned reply on 50 of 50 tickets, and the classifier confusion matrices.
+**4. Show the evidence (1.5 min).** Open **Model evaluation**: the loss curves (training worked and did not overfit), ROUGE-L more than doubling (0.158 → 0.343), BLEU 1.2 → 19.6, the LLM judge preferring the fine-tuned reply on 50 of 50 tickets, and the "Is a macro-F1 of 0.59 too low?" panel under the classifiers.
 
 **5. Be honest about the limits (30 s).** Replies are formulaic (they often offer a call), there are occasional factual slips, and the data is synthetic. That is why a human reviews every draft.
 
@@ -360,7 +361,7 @@ Point out the draft reply, the predicted category (*Billing and Payments*), prio
 │   └── tickets/                 Django app: model, API views, serializers, tests
 └── frontend/
     └── src/
-        ├── pages/                   Dashboard, Analyze, History, TicketDetail, Compare, Evaluation
+        ├── pages/                   Dashboard, HowItWorks, Analyze, History, TicketDetail, Compare, Evaluation
         ├── components/              result card, charts, UI pieces
         └── api.js                   calls to the backend
 ```

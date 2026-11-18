@@ -19,7 +19,7 @@ Step-by-step tests to check the whole app by hand in a browser: the Analyze page
 6. [Ticket history and detail](#6-ticket-history-and-detail) (TC-21 – TC-23)
 7. [Dashboard](#7-dashboard) (TC-24 – TC-25)
 8. [Model comparison](#8-model-comparison) (TC-26 – TC-29)
-9. [Model evaluation](#9-model-evaluation) (TC-30)
+9. [Model evaluation and How it works](#9-model-evaluation) (TC-30 – TC-30c)
 10. [Error handling](#10-error-handling) (TC-31 – TC-32)
 11. [Results log](#11-results-log)
 
@@ -497,7 +497,19 @@ Open **Model comparison**. The form is pre-filled with the refund ticket.
 | | |
 |---|---|
 | **Steps** | Open **Model evaluation** and scroll through every section. |
-| **Expected** | Sections: **Fine-tuning**, **Response quality: before vs after fine-tuning**, **AI-judge evaluation (LLM-as-a-judge)**, **Size and speed**, **Supporting classifiers**, **Dataset preparation**, **Example replies**, **Limitations**. Key values: ROUGE-L **0.158 → 0.343**, BLEU **1.17 → 19.57**, BERTScore F1 **0.867 → 0.899**, judge overall **1.59 → 4.03** with the fine-tuned model preferred on **50 of 50**, classifier accuracy type **0.881**, priority **0.643**, queue **0.620**, split **18,848 / 2,354 / 2,339**. The loss-curve and confusion-matrix images load (no broken-image icons). |
+| **Expected** | Sections: **Fine-tuning**, **Response quality: before vs after fine-tuning**, **AI-judge evaluation (LLM-as-a-judge)**, **Supporting classifiers**, **Dataset preparation**, **Example replies**, **Limitations**. There is **no** significance table, **no** "Size and speed" section and **no** confusion-matrix images. Key values: ROUGE-L **0.158 → 0.343**, BLEU **1.17 → 19.57**, BERTScore F1 **0.867 → 0.899**, judge overall **1.59 → 4.03** with the fine-tuned model preferred on **50 of 50**, classifier accuracy type **0.881**, priority **0.643**, queue **0.620**, split **18,848 / 2,354 / 2,339**. The Epochs row reads **4 (all epochs run, validation loss checked after each)**. |
+
+### TC-30b: Macro-F1 explanation panel
+| | |
+|---|---|
+| **Steps** | On **Model evaluation**, scroll to **Supporting classifiers** and the panel below the table. |
+| **Expected** | Title **"Is a macro-F1 of 0.59 too low?"** with the short answer "it is moderate, not bad". A bar chart with three bars per target: **Always guess the most common class**, **Random guessing** and **Our classifier**, where our bar is clearly highest for Category, Priority and Ticket type. Five numbered reasons, the first naming **General Inquiry (45 test tickets)** and **Technical Support (653)**, with plain accuracy **62%**. Two yellow boxes: **How the app handles it** and **How to improve it**. |
+
+### TC-30c: How it works page
+| | |
+|---|---|
+| **Steps** | Click **How it works** in the sidebar (second item). Scroll to the bottom. Click the **Analyze ticket** link in step 6. |
+| **Expected** | Title **How SupportGen works**, a problem/idea box, then 8 numbered steps: **The big picture** (4 boxes with arrows: Data → Training → Backend → Website), **The data** (61,765 raw → 28,261 English → 23,557 after cleaning; split 18,848 / 2,354 / 2,339), **Training the model** (18,848 examples, 30 minutes on a Tesla T4, 4 epochs, with a before/after reply for the server-crash ticket), **What happens when you click "Analyze ticket"** (a 5-row table), **How we know it works** (0.16 → 0.34, 0.58 → 0.78, 1.6 → 4.0, 50 / 50), **The website** (links to the pages), **Limits**, **Built with**. The link opens the Analyze page. |
 
 ---
 
@@ -554,6 +566,8 @@ Copy this table and fill it in while testing.
 | TC-28 | Compare: server crash | | |
 | TC-29 | Benchmark table + validation | | |
 | TC-30 | Evaluation page | | |
+| TC-30b | Macro-F1 explanation | | |
+| TC-30c | How it works page | | |
 | TC-31 | Backend stopped | | |
 | TC-32 | Unknown page | | |
 

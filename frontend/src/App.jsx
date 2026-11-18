@@ -6,6 +6,7 @@ import Compare from "./pages/Compare.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import Evaluation from "./pages/Evaluation.jsx";
 import History from "./pages/History.jsx";
+import HowItWorks from "./pages/HowItWorks.jsx";
 import TicketDetail from "./pages/TicketDetail.jsx";
 
 function SystemStatus() {
@@ -33,6 +34,7 @@ function SystemStatus() {
 
 const NAV = [
   ["/", "Dashboard"],
+  ["/how-it-works", "How it works"],
   ["/analyze", "Analyze ticket"],
   ["/history", "Ticket history"],
   ["/compare", "Model comparison"],
@@ -57,6 +59,7 @@ export default function App() {
       <main className="main">
         <Routes>
           <Route path="/" element={<Dashboard />} />
+          <Route path="/how-it-works" element={<HowItWorks />} />
           <Route path="/analyze" element={<Analyze />} />
           <Route path="/history" element={<History />} />
           <Route path="/tickets/:id" element={<TicketDetail />} />

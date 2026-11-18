@@ -476,7 +476,9 @@ Use this as a script when the examiner opens the **Model evaluation** page. Ever
 
 **What to say:** "Every quality metric improves, both word-based and meaning-based. The one that gets worse is variety, which is the cost of learning one company's reply style."
 
-### 11.3 Is the improvement statistically significant? (table)
+### 11.3 Is the improvement statistically significant?
+
+*This table is no longer on the website, to keep the page simple. The numbers are in `results/gen_metrics.json` (`significance_B_vs_A`). Use them if the examiner asks "how do you know it isn't luck?".*
 
 For each metric the table shows the mean improvement, its 95% confidence interval, the p-value and the share of tickets where B beat A:
 
@@ -523,6 +525,8 @@ How to explain the columns:
 
 ### 11.5 Size and speed
 
+*This section is no longer on the website. The numbers are in `results/gen_metrics.json` (`efficiency_finetuned`). Use them if asked about model size or speed.*
+
 | Item | Value | How to explain it |
 |---|---|---|
 | Parameters | 77.0M | Small: about 1/90 of a 7B LLM |
@@ -552,12 +556,33 @@ Key observations:
 - **Priority "low" recall is 0.24.** Most low-priority tickets are predicted as medium. Urgency is weakly visible in the words, and the synthetic labels are partly arbitrary.
 - **Type works well** (0.88): words like "please change", "request" and "error" signal the type directly. *Problem* vs *Incident* is the main confusion, because both describe something broken.
 
-**Confusion matrices (three images):**
+**The "Is a macro-F1 of 0.59 too low?" panel (below the table):**
+- **Short answer:** moderate, not bad. Type (0.87) is good. Category (0.59) and priority (0.58) are clearly better than guessing, but there is room to improve.
+- **The chart:** for each target, three bars: *always guess the most common class*, *random guessing* and *our classifier*. Ours is far higher every time. For category: 0.04 (majority) and 0.11 (random) vs **0.59**.
+- **The five reasons, in your own words:**
+  1. Macro-F1 is strict: small classes such as General Inquiry (45 test tickets) count as much as Technical Support (653).
+  2. The 10 categories overlap.
+  3. Priority is subjective.
+  4. TF-IDF only counts words.
+  5. The labels are synthetic.
+- **The two boxes:** the app shows a confidence score so the agent can double-check, and the improvement plan is a Transformer classifier, more small-class data and merging overlapping categories.
+
+**Q111. Isn't a macro-F1 of 0.59 too low?**
+It is moderate, not bad, and it has to be read in context.
+- **There are 10 categories.** Always guessing the most common one scores 0.04, random guessing 0.11, and ours 0.59.
+- **Macro-F1 is the strictest average.** It weights tiny classes (45 tickets) the same as huge ones (653). Plain accuracy is 0.62, and weighted F1 is 0.61.
+- **Most errors are between categories that really overlap,** such as Technical, IT and Product Support. Even people would disagree on some of those tickets.
+- **Ticket type, which has clear word signals, reaches 0.87.**
+- **The classifiers are supporting components.** The main GenAI part is the reply generator, and the app shows confidence scores so the agent can double-check low ones.
+
+To improve it: a fine-tuned DistilBERT or DeBERTa classifier, more data for small classes, and merging overlapping queues.
+
+**Confusion matrices** (no longer on the website; they are in `results/plots/cm_*.png` if the examiner asks):
 - Rows are the **true** class and columns the **predicted** class. They are row-normalised, so each row adds up to 100%.
 - The **diagonal** is the share predicted correctly; a darker diagonal is better.
 - Off-diagonal cells show which classes get mixed up. For queue, these are mostly the overlapping support queues (Technical / IT / Product Support, Customer Service).
 
-**Sentiment line under the matrices:** on 500 test tickets the pretrained model predicted 55% negative, 28% neutral and 17% positive. This is not evaluated (there are no labels); it only shows that the predictions are plausible for complaint tickets.
+**Sentiment line at the bottom of the section:** on 500 test tickets the pretrained model predicted 55% negative, 28% neutral and 17% positive. This is not evaluated (there are no labels); it only shows that the predictions are plausible for complaint tickets.
 
 ### 11.7 Dataset preparation
 

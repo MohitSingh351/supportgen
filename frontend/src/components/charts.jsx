@@ -43,7 +43,7 @@ export function DistributionBars({ data, color = "var(--seq)", height }) {
 }
 
 /** Grouped vertical bars comparing named series across metrics. */
-export function GroupedBars({ rows, series, height = 280, yMax = "auto", format = (v) => v.toFixed(3) }) {
+export function GroupedBars({ rows, series, height = 280, yMax = "auto", yTicks, format = (v) => v.toFixed(3) }) {
   return (
     <>
       <div className="legend">
@@ -53,7 +53,7 @@ export function GroupedBars({ rows, series, height = 280, yMax = "auto", format 
         <BarChart data={rows} margin={{ top: 8, right: 8, bottom: 4, left: 0 }} barGap={2} barCategoryGap="22%">
           <CartesianGrid vertical={false} stroke="var(--grid)" />
           <XAxis dataKey="metric" {...axisProps} interval={0} tick={{ fill: "var(--muted)", fontSize: 11 }} />
-          <YAxis {...axisProps} axisLine={false} domain={[0, yMax]} ticks={yMax === "auto" ? undefined : Array.from({ length: yMax + 1 }, (_, i) => i)} />
+          <YAxis {...axisProps} axisLine={false} domain={[0, yMax]} ticks={yTicks || (yMax === "auto" ? undefined : Array.from({ length: yMax + 1 }, (_, i) => i))} />
           <Tooltip cursor={{ fill: "var(--plane)" }} content={<TooltipBox format={format} />} />
           {series.map((s) => (
             <Bar key={s.key} dataKey={s.key} name={s.name} fill={s.color} radius={[4, 4, 0, 0]} maxBarSize={36} isAnimationActive={false} />

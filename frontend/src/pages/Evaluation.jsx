@@ -56,7 +56,6 @@ function GenerationQuality({ gen }) {
     ["Semantic cosine", "semantic_cosine"], ["Distinct-2 (variety)", "distinct_2"],
     ["Average words per reply", "avg_pred_words", 1],
   ];
-  const sig = gen.significance_B_vs_A || {};
   return (
     <div className="section">
       <h2>Response quality: before vs after fine-tuning</h2>
@@ -80,27 +79,6 @@ function GenerationQuality({ gen }) {
           </table>
           <p className="small muted" style={{ marginTop: 10 }}>BERTScore model: {a.bertscore_model}. BLEU rewards exact n-gram
             matches, so it is harsh on open-ended replies where many wordings are correct.</p>
-        </div>
-      </div>
-
-      <div className="panel" style={{ marginTop: 16 }}>
-        <h3 style={{ marginBottom: 6 }}>Is the improvement statistically significant?</h3>
-        <p className="small muted" style={{ marginBottom: 10 }}>Paired Wilcoxon signed-rank test per ticket, and a bootstrap 95% confidence interval of the mean difference (2,000 resamples).</p>
-        <div className="table-wrap">
-          <table>
-            <thead><tr><th>Metric</th><th className="n">Mean difference</th><th className="n">95% CI</th><th className="n">p-value</th><th className="n">Fine-tuned better on</th></tr></thead>
-            <tbody>
-              {Object.entries(sig).map(([k, s]) => (
-                <tr key={k}>
-                  <td>{k}</td>
-                  <td className="n">+{fmt(s.mean_diff_B_minus_A)}</td>
-                  <td className="n">{fmt(s.ci95_low)} to {fmt(s.ci95_high)}</td>
-                  <td className="n">{Number(s.wilcoxon_p).toExponential(1)}</td>
-                  <td className="n">{fmt(s["B_better_on_%_of_tickets"], 1)}% of tickets</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
         </div>
       </div>
     </div>
@@ -163,18 +141,72 @@ function JudgeEvaluation({ j }) {
   );
 }
 
-function Efficiency({ eff }) {
-  if (!eff) return null;
+/** Number of test tickets per class, from the confusion matrix (rows = true class). */
+function supports(m) {
+  const out = {};
+  (m.labels || []).forEach((label, i) => { out[label] = (m.confusion_matrix?.[i] || []).reduce((s, v) => s + v, 0); });
+  return out;
+}
+
+function MacroF1Explained({ cls }) {
+  const q = cls.queue_group, p = cls.priority, t = cls.type;
+  if (!q || !p || !t) return null;
+  const rows = [["Category", q], ["Priority", p], ["Ticket type", t]].map(([metric, m]) => ({
+    metric,
+    majority: m.baseline_majority?.macro_f1 ?? 0,
+    random: m.baseline_stratified_random?.macro_f1 ?? 0,
+    ours: m.macro_f1,
+  }));
+  const qs = supports(q);
+  const total = Object.values(qs).reduce((s, v) => s + v, 0);
+  const sorted = Object.entries(qs).sort((x, y) => y[1] - x[1]);
+  const [bigName, bigN] = sorted[0] || [];
+  const [smallName, smallN] = sorted[sorted.length - 1] || [];
+  const f1 = (m, k) => fmt(m.per_class_f1?.[k], 2);
+
   return (
-    <div className="section">
-      <h2>Size and speed</h2>
-      <div className="stats" style={{ marginTop: 12 }}>
-        <div className="stat"><div className="value num">{(eff.parameters / 1e6).toFixed(1)}M</div><div className="label">Parameters</div></div>
-        <div className="stat"><div className="value num">{fmt(eff.size_on_disk_mb, 0)} MB</div><div className="label">Size on disk</div></div>
-        <div className="stat"><div className="value num">{fmt(eff.latency_gpu_batch1?.mean_s, 2)} s</div><div className="label">Per reply on {eff.gpu} GPU</div></div>
-        <div className="stat"><div className="value num">{fmt(eff.latency_cpu_batch1?.mean_s, 2)} s</div><div className="label">Per reply on Colab CPU</div></div>
+    <div className="panel" style={{ marginTop: 16 }}>
+      <h3 style={{ marginBottom: 6 }}>Is a macro-F1 of {fmt(q.macro_f1, 2)} too low?</h3>
+      <p style={{ marginBottom: 14, maxWidth: "75ch" }}>
+        <b>Short answer: it is moderate, not bad.</b> Ticket type ({fmt(t.macro_f1, 2)}) is good. Category
+        ({fmt(q.macro_f1, 2)}) and priority ({fmt(p.macro_f1, 2)}) are clearly better than guessing, but
+        there is room to improve. The chart compares our classifiers with two "dumb" guessers.
+      </p>
+      <div className="grid-2" style={{ alignItems: "start" }}>
+        <div>
+          <GroupedBars rows={rows} yMax={1} yTicks={[0, 0.25, 0.5, 0.75, 1]} format={(v) => v.toFixed(2)} height={240}
+                       series={[{ key: "majority", name: "Always guess the most common class", color: "var(--series-4)" },
+                                { key: "random", name: "Random guessing", color: "var(--series-2)" },
+                                { key: "ours", name: "Our classifier", color: "var(--series-1)" }]} />
+          <p className="small muted">Macro-F1 on {total.toLocaleString()} test tickets (0 = useless, 1 = perfect).</p>
+        </div>
+        <div>
+          <h3 style={{ marginBottom: 8 }}>Why the score looks low</h3>
+          <ol style={{ margin: 0, paddingLeft: 20, display: "grid", gap: 8 }}>
+            <li><b>Macro-F1 is a strict score.</b> Every class counts equally, so a small class
+              like {smallName} ({smallN} test tickets) counts as much as {bigName} ({bigN}).
+              Mistakes on the small classes pull the average down. Plain accuracy is {pct(q.accuracy)}.</li>
+            <li><b>The 10 categories overlap.</b> Technical Support, IT Support, Product Support and
+              Customer Service often describe the same kind of problem. Even people would disagree on some tickets.</li>
+            <li><b>Priority is subjective.</b> The same words can be "medium" or "low" urgency. The
+              "low" class is the hardest (F1 {f1(p, "low")}).</li>
+            <li><b>The classifier only counts words</b> (TF-IDF). It does not understand meaning,
+              so "return my laptop" can look like an IT ticket.</li>
+            <li><b>The labels are synthetic</b>, so some of them are partly random.</li>
+          </ol>
+        </div>
       </div>
-      <p className="small muted" style={{ marginTop: 8 }}>Measured one ticket at a time. Peak GPU memory during generation: {fmt(eff.latency_gpu_batch1?.peak_gpu_mb, 0)} MB.</p>
+      <div className="grid-2" style={{ marginTop: 16, alignItems: "start" }}>
+        <div className="alert warn">
+          <b>How the app handles it:</b> every prediction shows a confidence score, so the agent knows
+          when to double-check. These labels only help the agent. The main GenAI part is the reply,
+          which is evaluated above.
+        </div>
+        <div className="alert warn">
+          <b>How to improve it:</b> use a Transformer classifier (e.g. DistilBERT) that understands
+          meaning, add more examples of the small classes, and merge categories that overlap.
+        </div>
+      </div>
     </div>
   );
 }
@@ -207,14 +239,7 @@ function Classification({ cls }) {
           </tbody>
         </table>
       </div>
-      <div className="grid-3" style={{ marginTop: 16 }}>
-        {targets.map(([k, label]) => (
-          <figure key={k} style={{ margin: 0 }}>
-            <img className="plot" src={api.plotUrl(`cm_${k}`)} alt={`Confusion matrix for ${label}`} loading="lazy" />
-            <figcaption className="small muted">{label}: test confusion matrix, row-normalised</figcaption>
-          </figure>
-        ))}
-      </div>
+      <MacroF1Explained cls={cls} />
       {cls.sentiment_inferred && (
         <p className="small muted" style={{ marginTop: 12 }}>
           Sentiment uses the pretrained {cls.sentiment_inferred.model}. The dataset has no sentiment labels, so it is
@@ -320,7 +345,6 @@ export default function Evaluation() {
       {data.training_config && <Training tc={data.training_config} log={data.train_log} />}
       <GenerationQuality gen={data.generation} />
       <JudgeEvaluation j={data.llm_judge} />
-      <Efficiency eff={data.generation.efficiency_finetuned} />
       {data.classification && <Classification cls={data.classification} />}
       {data.dataset?.eda && <Dataset ds={data.dataset} />}
       <Examples rows={data.qualitative_examples} />
