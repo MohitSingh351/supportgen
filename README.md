@@ -207,7 +207,7 @@ Located in `frontend/` (React + Vite). In development, the Vite dev server forwa
 | Page | What it shows |
 |---|---|
 | **Dashboard** | Totals and distributions of analysed tickets (category, priority, type, inferred sentiment), recent tickets and the model's headline metrics |
-| **How it works** | The whole project on one page in plain language: the problem, the 4-part pipeline, the data, training (with a real before/after reply), what happens on "Analyze", headline results, the pages and the limits. Good for presenting. |
+| **How it works** | The whole project on one page in plain language: the problem, a 4-box overview, then the full pipeline step by step in four phases (A: prepare the data, B: build the models, C: test the models, D: run the app, including the 9 steps behind "Analyze ticket"), headline results, the pages and the limits. Good for presenting. |
 | **Analyze ticket** | Paste a ticket and get the fine-tuned reply, summary, recommended action, category, priority, type and sentiment |
 | **Ticket history** | Every analysed ticket, with a detail view |
 | **Model comparison** | Live: one ticket through base FLAN-T5, fine-tuned FLAN-T5 and Gemini (if configured), plus the offline benchmark |

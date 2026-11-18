@@ -275,3 +275,46 @@ details summary { cursor: pointer; color: var(--ink-2); font-weight: 500; }
   .flow-step { flex-direction: column; }
   .flow-arrow { transform: rotate(90deg); padding: 4px 0; }
 }
+
+/* pipeline phases */
+.phase { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius-m); padding: 20px; margin-bottom: 18px; scroll-margin-top: 16px; }
+.phase-head { display: flex; gap: 14px; align-items: center; }
+.phase-head h3 { font-size: 1.05rem; }
+.phase-letter {
+  display: grid; place-items: center; width: 38px; height: 38px; flex: none;
+  border-radius: var(--radius-m); background: var(--accent-soft); color: var(--accent); font-weight: 700; font-size: 1.1rem;
+}
+.phase-intro { color: var(--ink-2); margin: 10px 0 4px; }
+.stages { display: grid; gap: 0; margin-top: 14px; }
+.stage { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 12px; position: relative; padding-bottom: 18px; }
+.stage::before { content: ""; position: absolute; left: 21px; top: 34px; bottom: 0; width: 2px; background: var(--line); }
+.stage:last-child::before { display: none; }
+.stage-n {
+  width: 44px; height: 30px; display: grid; place-items: center; border-radius: 999px;
+  border: 1px solid var(--accent); color: var(--accent); font-size: 0.8rem; font-weight: 600; background: var(--paper);
+}
+.stage-body { min-width: 0; padding-top: 4px; }
+.stage-title { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; margin-bottom: 6px; }
+.stage-where { font-size: 0.78rem; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 0 8px; }
+.stage-text { color: var(--ink-2); max-width: 85ch; }
+.stage-text p + p, .stage-text p + ol, .stage-text ol + p { margin-top: 8px; }
+.stage-text ul, .stage-text ol { margin: 6px 0 0; padding-left: 20px; display: grid; gap: 4px; }
+.stage-text b { color: var(--ink); }
+.stage-result {
+  margin-top: 10px; display: inline-flex; gap: 8px; align-items: baseline; flex-wrap: wrap;
+  background: var(--accent-soft); border-radius: var(--radius-s); padding: 5px 10px; font-size: 0.86rem;
+}
+.stage-result span { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--accent); }
+.why { margin-top: 8px; font-size: 0.88rem; border-left: 3px solid var(--line-strong); padding-left: 10px; }
+.prompt {
+  margin: 8px 0; padding: 10px 12px; background: var(--plane); border: 1px solid var(--line); border-radius: var(--radius-s);
+  font-size: 0.85rem; white-space: pre-wrap; overflow-x: auto;
+}
+code { font-size: 0.88em; background: var(--plane); border: 1px solid var(--line); border-radius: 3px; padding: 0 4px; }
+.req-flow li::marker { color: var(--accent); font-weight: 700; }
+@media (max-width: 980px) {
+  .phase { padding: 14px; }
+  .stage { grid-template-columns: 38px minmax(0, 1fr); gap: 10px; }
+  .stage-n { width: 38px; font-size: 0.72rem; }
+  .stage::before { left: 18px; }
+}
